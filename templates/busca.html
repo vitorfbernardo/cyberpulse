@@ -1,0 +1,508 @@
+{% extends "base.html" %}
+
+{% block title %}Busca Avançada - CyberPulse{% endblock %}
+
+{% block content %}
+<div class="search-container">
+    <!-- Cabeçalho -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-search"></i> Busca Avançada</h1>
+            <p>Pesquise por palavras-chave, hashes, CVEs, IPs e mais</p>
+        </div>
+    </div>
+    <!-- Checkbox para incluir BNVD -->
+<div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" name="incluir_bnvd" id="incluir_bnvd" value="1" 
+           {% if request.GET.incluir_bnvd %}checked{% endif %}>
+    <label class="form-check-label" for="incluir_bnvd">
+        🇧🇷 <strong>Incluir Banco Nacional de Vulnerabilidades (BNVD)</strong>
+        <small class="text-muted d-block">Adiciona vulnerabilidades em português do banco brasileiro</small>
+    </label>
+</div>
+    <!-- Formulário de Busca -->
+<div class="search-form-card">
+    <form method="get" action="{% url 'busca' %}" class="advanced-search-form">
+        <div class="search-input-wrapper">
+            <input 
+                type="text" 
+                name="q" 
+                id="search-input"
+                value="{{ query }}"
+                placeholder="Digite sua busca: palavra-chave, hash, CVE-2024-XXXX, IP..."
+                class="search-input"
+                autofocus
+            >
+            <button type="submit" class="search-btn">
+                <i class="fas fa-search"></i> Buscar
+            </button>
+        </div>
+
+        <!-- Checkbox BNVD -->
+        <div class="bnvd-checkbox-wrapper" style="margin: 15px 0;">
+            <label class="bnvd-checkbox-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input 
+                    type="checkbox" 
+                    name="incluir_bnvd" 
+                    id="incluir_bnvd" 
+                    value="1" 
+                    checked
+                    style="width: 18px; height: 18px; cursor: pointer;"
+                >
+                <span style="font-size: 14px;">
+                    🇧🇷 <strong>Incluir Banco Nacional de Vulnerabilidades (BNVD)</strong>
+                    <small style="display: block; color: #6c757d; margin-left: 26px;">
+                        Adiciona vulnerabilidades em português do banco brasileiro
+                    </small>
+                </span>
+            </label>
+        </div>
+
+        <div class="search-types">
+            <label class="search-type-option">
+                <input type="radio" name="type" value="all" {% if search_type == 'all' or not search_type %}checked{% endif %}>
+                <span><i class="fas fa-globe"></i> Tudo</span>
+            </label>
+            <label class="search-type-option">
+                <input type="radio" name="type" value="hash" {% if search_type == 'hash' %}checked{% endif %}>
+                <span><i class="fas fa-fingerprint"></i> Hash (MD5/SHA256)</span>
+            </label>
+            <label class="search-type-option">
+                <input type="radio" name="type" value="cve" {% if search_type == 'cve' %}checked{% endif %}>
+                <span><i class="fas fa-bug"></i> CVE</span>
+            </label>
+            <label class="search-type-option">
+                <input type="radio" name="type" value="ip" {% if search_type == 'ip' %}checked{% endif %}>
+                <span><i class="fas fa-network-wired"></i> IP Address</span>
+            </label>
+        </div>
+    </form>
+</div>
+
+    <!-- Resultados -->
+    {% if query %}
+        <div class="results-header">
+            <h2>
+                {% if total_results > 0 %}
+                    <i class="fas fa-check-circle"></i> {{ total_results }} resultado(s) encontrado(s) para "{{ query }}"
+                {% else %}
+                    <i class="fas fa-times-circle"></i> Nenhum resultado encontrado para "{{ query }}"
+                {% endif %}
+            </h2>
+        </div>
+
+        {% if results %}
+            <div class="results-grid">
+                {% for article in results %}
+                <div class="result-card">
+                    <div class="result-header">
+                        <span class="result-category vulnerability">
+                            🛡️ {{ article.severity|default:"N/A" }}
+                        </span>
+                        <span class="result-source">
+                            🇧🇷 BNVD
+                            {% if article.cvss_score %}
+                                <span class="cvss-badge">CVSS: {{ article.cvss_score }}</span>
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <h3 class="result-title">
+                        <i class="fas fa-bug"></i> {{ article.cve_id }}
+                    </h3>
+                    
+                    <div class="result-description-full">
+                        {{ article.description }}
+                    </div>
+
+                    <div class="result-metadata">
+                        <div class="metadata-item">
+                            <i class="fas fa-calendar-alt"></i>
+                            <strong>Publicado:</strong> {{ article.published_date|date:"d/m/Y" }}
+                        </div>
+                        {% if article.cvss_score %}
+                        <div class="metadata-item">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Score CVSS:</strong> {{ article.cvss_score }}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="result-footer">
+                        <a href="{{ article.link }}" target="_blank" class="result-link-btn">
+                            <i class="fas fa-external-link-alt"></i> Ver Detalhes no BNVD
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="no-search">
+            <i class="fas fa-search"></i>
+            <h3>Digite algo para começar a buscar</h3>
+            <p>Você pode pesquisar por:</p>
+            <ul>
+                <li>🔎 Palavras-chave (ex: "ransomware", "phishing")</li>
+                <li>🔒 Hashes MD5/SHA256 de malware</li>
+                <li>🐛 CVEs (ex: "CVE-2024-1234")</li>
+                <li>🌐 Endereços IP suspeitos</li>
+            </ul>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .search-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .search-form-card {
+        background: rgba(20, 25, 30, 0.8);
+        border: 1px solid rgba(0, 255, 136, 0.2);
+        border-radius: 12px;
+        padding: 30px;
+        margin-top: 30px;
+        margin-bottom: 30px;
+    }
+
+    .advanced-search-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .search-input-wrapper {
+        display: flex;
+        gap: 10px;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 15px 20px;
+        background: rgba(10, 15, 20, 0.9);
+        border: 2px solid rgba(0, 255, 136, 0.3);
+        border-radius: 8px;
+        color: #ffffff;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--cyber-green);
+        box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+    }
+
+    .search-btn {
+        padding: 15px 30px;
+        background: linear-gradient(135deg, var(--cyber-green), var(--cyber-blue));
+        color: var(--cyber-dark);
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .search-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 255, 136, 0.4);
+    }
+
+    .search-types {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .search-type-option {
+        flex: 1;
+        min-width: 150px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 15px;
+        background: rgba(10, 15, 20, 0.8);
+        border: 2px solid rgba(0, 255, 136, 0.2);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .search-type-option:hover {
+        border-color: var(--cyber-green);
+        background: rgba(0, 255, 136, 0.05);
+    }
+
+    .search-type-option input[type="radio"] {
+        accent-color: var(--cyber-green);
+    }
+
+    .search-type-option input[type="radio"]:checked + span {
+        color: var(--cyber-green);
+        font-weight: 600;
+    }
+
+    .search-examples {
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid rgba(0, 255, 136, 0.2);
+    }
+
+    .search-examples h4 {
+        color: #aaaaaa;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .example-tags {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .example-tag {
+        padding: 8px 15px;
+        background: rgba(0, 255, 136, 0.1);
+        border: 1px solid rgba(0, 255, 136, 0.3);
+        border-radius: 20px;
+        color: var(--cyber-green);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .example-tag:hover {
+        background: rgba(0, 255, 136, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .results-header {
+        margin-bottom: 20px;
+    }
+
+    .results-header h2 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--cyber-green);
+    }
+
+    .results-grid {
+        display: grid;
+        gap: 25px;
+    }
+
+    .result-card {
+        background: rgba(20, 25, 30, 0.9);
+        border: 2px solid rgba(0, 255, 136, 0.2);
+        border-radius: 12px;
+        padding: 30px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .result-card:hover {
+        border-color: var(--cyber-green);
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
+    }
+
+    .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+    }
+
+    .result-category {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .result-category.vulnerability {
+        background: rgba(255, 100, 0, 0.2);
+        color: #ff8833;
+        border: 1px solid rgba(255, 100, 0, 0.4);
+    }
+
+    .result-source {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #aaaaaa;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .cvss-badge {
+        padding: 6px 12px;
+        background: rgba(255, 50, 50, 0.2);
+        border: 1px solid rgba(255, 50, 50, 0.4);
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #ff5555;
+    }
+
+    .result-title {
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+        color: var(--cyber-green);
+        line-height: 1.4;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .result-title i {
+        color: var(--cyber-blue);
+    }
+
+    .result-description-full {
+        color: #dddddd;
+        line-height: 1.9;
+        margin-bottom: 25px;
+        text-align: justify;
+        font-size: 1rem;
+        padding: 15px;
+        background: rgba(10, 15, 20, 0.5);
+        border-left: 3px solid var(--cyber-green);
+        border-radius: 5px;
+    }
+
+    .result-metadata {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(0, 255, 136, 0.05);
+        border-radius: 8px;
+        flex-wrap: wrap;
+    }
+
+    .metadata-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #cccccc;
+        font-size: 0.95rem;
+    }
+
+    .metadata-item i {
+        color: var(--cyber-green);
+    }
+
+    .metadata-item strong {
+        color: #ffffff;
+        margin-right: 5px;
+    }
+
+    .result-footer {
+        display: flex;
+        justify-content: center;
+        padding-top: 20px;
+        border-top: 1px solid rgba(0, 255, 136, 0.2);
+    }
+
+    .result-link-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 30px;
+        background: linear-gradient(135deg, var(--cyber-green), var(--cyber-blue));
+        color: var(--cyber-dark);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .result-link-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 255, 136, 0.4);
+    }
+
+    .no-search {
+        text-align: center;
+        padding: 60px 20px;
+        background: rgba(20, 25, 30, 0.5);
+        border: 1px solid rgba(0, 255, 136, 0.1);
+        border-radius: 12px;
+    }
+
+    .no-search i {
+        font-size: 4rem;
+        color: var(--cyber-green);
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .no-search h3 {
+        margin-bottom: 15px;
+        color: #ffffff;
+    }
+
+    .no-search p {
+        color: #aaaaaa;
+        margin-bottom: 15px;
+    }
+
+    .no-search ul {
+        list-style: none;
+        padding: 0;
+        color: #cccccc;
+    }
+
+    .no-search ul li {
+        padding: 8px 0;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .search-input-wrapper {
+            flex-direction: column;
+        }
+
+        .search-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .search-types {
+            flex-direction: column;
+        }
+
+        .result-card {
+            padding: 20px;
+        }
+        
+        .result-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .result-metadata {
+            flex-direction: column;
+            gap: 10px;
+        }
+    }
+</style>
+{% endblock %}

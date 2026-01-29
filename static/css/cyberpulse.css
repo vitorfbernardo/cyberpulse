@@ -1,0 +1,346 @@
+/* CSS principal do CyberPulse */
+:root {
+    --cyber-green: #00ff88;
+    --cyber-blue: #00ccff;
+    --cyber-purple: #ff00ff;
+    --cyber-dark: #0a0a0f;
+    --cyber-darker: #050508;
+    --cyber-gray: #1a1a25;
+    --cyber-light: #e0e0e0;
+    --cyber-red: #ff3366;
+    --cyber-yellow: #ffff00;
+}
+
+/* Reset e corpo */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+}
+
+.cyber-body {
+    background: var(--cyber-dark);
+    color: var(--cyber-light);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header principal */
+.cyber-header {
+    background: rgba(10, 15, 20, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+    height: 70px;
+}
+
+/* Logo */
+.header-logo .logo-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+    color: var(--cyber-light);
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+}
+
+.logo-icon {
+    font-size: 1.8rem;
+    color: var(--cyber-green);
+    animation: pulse 2s infinite;
+}
+
+.logo-text {
+    background: linear-gradient(90deg, var(--cyber-green), var(--cyber-blue));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.logo-pulse {
+    animation: textPulse 3s infinite;
+}
+
+/* Navegação */
+.cyber-nav .nav-list {
+    display: flex;
+    list-style: none;
+    gap: 20px;
+}
+
+.nav-item .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    text-decoration: none;
+    color: var(--cyber-light);
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.nav-item .nav-link:hover {
+    background: rgba(0, 255, 136, 0.1);
+    color: var(--cyber-green);
+}
+
+.nav-item .nav-link i {
+    font-size: 1.1rem;
+}
+
+.nav-item .nav-link .badge {
+    background: var(--cyber-red);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: 5px;
+}
+
+/* Usuário e notificações */
+.header-user {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.notif-btn {
+    background: rgba(0, 255, 136, 0.1);
+    border: 1px solid rgba(0, 255, 136, 0.3);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cyber-green);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.notif-btn:hover {
+    background: rgba(0, 255, 136, 0.2);
+    transform: scale(1.05);
+}
+
+.notif-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--cyber-red);
+    color: white;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 15px;
+    background: rgba(20, 25, 30, 0.8);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 255, 136, 0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.user-profile:hover {
+    background: rgba(25, 30, 35, 0.9);
+    border-color: rgba(0, 255, 136, 0.3);
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--cyber-green), var(--cyber-blue));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cyber-dark);
+    font-size: 1.2rem;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.user-role {
+    font-size: 0.75rem;
+    color: #88ffcc;
+    opacity: 0.8;
+}
+
+.user-dropdown {
+    color: var(--cyber-green);
+    font-size: 0.9rem;
+}
+
+/* Barra de status */
+.status-bar {
+    background: rgba(5, 10, 15, 0.9);
+    border-top: 1px solid rgba(0, 255, 136, 0.1);
+    padding: 8px 30px;
+    display: flex;
+    gap: 30px;
+    font-size: 0.85rem;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cyber-red);
+}
+
+.status-dot.active {
+    background: var(--cyber-green);
+    box-shadow: 0 0 8px var(--cyber-green);
+    animation: dotPulse 2s infinite;
+}
+
+.threat-low {
+    color: var(--cyber-green);
+}
+
+.threat-medium {
+    color: var(--cyber-yellow);
+}
+
+.threat-high {
+    color: var(--cyber-red);
+}
+
+/* Conteúdo principal */
+.cyber-main {
+    flex: 1;
+    padding: 30px;
+    background: rgba(5, 10, 15, 0.5);
+}
+
+/* Footer */
+.cyber-footer {
+    background: rgba(10, 15, 20, 0.95);
+    border-top: 1px solid rgba(0, 255, 136, 0.1);
+    padding: 20px 30px;
+    text-align: center;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.footer-content p {
+    color: #888888;
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+}
+
+.footer-links a {
+    color: #66cc99;
+    text-decoration: none;
+    margin: 0 10px;
+    font-size: 0.8rem;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: var(--cyber-green);
+}
+
+/* Animações */
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes textPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+}
+
+@keyframes dotPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Responsividade */
+@media (max-width: 1024px) {
+    .header-container {
+        padding: 0 20px;
+    }
+    
+    .cyber-nav .nav-list {
+        gap: 10px;
+    }
+    
+    .nav-item .nav-link span {
+        display: none;
+    }
+    
+    .status-bar {
+        padding: 8px 20px;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-container {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 15px 20px;
+    }
+    
+    .cyber-nav {
+        order: 3;
+        width: 100%;
+        margin-top: 15px;
+    }
+    
+    .cyber-nav .nav-list {
+        justify-content: center;
+    }
+    
+    .user-info {
+        display: none;
+    }
+    
+    .status-bar {
+        flex-direction: column;
+        gap: 10px;
+    }
+}

@@ -1,0 +1,592 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações - CyberPulse{% endblock %}
+
+{% block content %}
+<div class="config-container">
+    <!-- Cabeçalho -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1><i class="fas fa-cog"></i> Configurações do Sistema</h1>
+            <p>Gerencie as configurações e fontes do CyberPulse</p>
+        </div>
+    </div>
+
+    <!-- Informações do Sistema -->
+    <div class="config-section">
+        <div class="section-header">
+            <h2><i class="fas fa-info-circle"></i> Informações do Sistema</h2>
+        </div>
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">Última Atualização:</span>
+                <span class="info-value">
+                    {% if last_update %}
+                        {{ last_update.created_at|timesince }} atrás
+                    {% else %}
+                        Nenhuma atualização ainda
+                    {% endif %}
+                </span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Total de Fontes:</span>
+                <span class="info-value">{{ total_sources }} fonte(s) ativa(s)</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Versão do Sistema:</span>
+                <span class="info-value">CyberPulse v1.0.0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Framework:</span>
+                <span class="info-value">Django 5.2.10</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fontes RSS -->
+    <div class="config-section">
+        <div class="section-header">
+            <h2><i class="fas fa-rss"></i> Fontes RSS Configuradas</h2>
+        </div>
+        <div class="sources-list">
+            <div class="source-item active">
+                <div class="source-status">
+                    <span class="status-dot active"></span>
+                </div>
+                <div class="source-info">
+                    <h3>The Hacker News</h3>
+                    <p class="source-url">https://feeds.feedburner.com/TheHackersNews</p>
+                    <p class="source-description">Notícias de segurança, vulnerabilidades e ameaças cibernéticas</p>
+                </div>
+                <div class="source-actions">
+                    <span class="source-badge active">ATIVA</span>
+                </div>
+            </div>
+
+            <div class="source-item active">
+                <div class="source-status">
+                    <span class="status-dot active"></span>
+                </div>
+                <div class="source-info">
+                    <h3>Bleeping Computer</h3>
+                    <p class="source-url">https://www.bleepingcomputer.com/feed/</p>
+                    <p class="source-description">Análises técnicas, malware e breaking news de segurança</p>
+                </div>
+                <div class="source-actions">
+                    <span class="source-badge active">ATIVA</span>
+                </div>
+            </div>
+
+            <div class="source-item active">
+                <div class="source-status">
+                    <span class="status-dot active"></span>
+                </div>
+                <div class="source-info">
+                    <h3>Threatpost</h3>
+                    <p class="source-url">https://threatpost.com/feed/</p>
+                    <p class="source-description">Inteligência de ameaças e pesquisas em cybersecurity</p>
+                </div>
+                <div class="source-actions">
+                    <span class="source-badge active">ATIVA</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comandos Úteis -->
+    <div class="config-section">
+        <div class="section-header">
+            <h2><i class="fas fa-terminal"></i> Comandos Úteis</h2>
+        </div>
+        <div class="commands-grid">
+            <div class="command-card">
+                <div class="command-icon">
+                    <i class="fas fa-sync"></i>
+                </div>
+                <h3>Atualizar Notícias</h3>
+                <div class="command-code">
+                    <code>python manage.py update_news</code>
+                    <button class="copy-btn" onclick="copyCommand('python manage.py update_news')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <p>Busca e importa novas notícias de todas as fontes RSS configuradas</p>
+            </div>
+
+            <div class="command-card">
+                <div class="command-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <h3>Criar Migrações</h3>
+                <div class="command-code">
+                    <code>python manage.py makemigrations</code>
+                    <button class="copy-btn" onclick="copyCommand('python manage.py makemigrations')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <p>Cria arquivos de migração para alterações no banco de dados</p>
+            </div>
+
+            <div class="command-card">
+                <div class="command-icon">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
+                <h3>Aplicar Migrações</h3>
+                <div class="command-code">
+                    <code>python manage.py migrate</code>
+                    <button class="copy-btn" onclick="copyCommand('python manage.py migrate')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <p>Aplica as migrações pendentes no banco de dados</p>
+            </div>
+
+            <div class="command-card">
+                <div class="command-icon">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h3>Criar Superusuário</h3>
+                <div class="command-code">
+                    <code>python manage.py createsuperuser</code>
+                    <button class="copy-btn" onclick="copyCommand('python manage.py createsuperuser')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <p>Cria um usuário administrador para acessar o painel admin</p>
+            </div>
+
+            <div class="command-card">
+                <div class="command-icon">
+                    <i class="fas fa-play"></i>
+                </div>
+                <h3>Iniciar Servidor</h3>
+                <div class="command-code">
+                    <code>python manage.py runserver</code>
+                    <button class="copy-btn" onclick="copyCommand('python manage.py runserver')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <p>Inicia o servidor de desenvolvimento Django</p>
+            </div>
+
+            <div class="command-card">
+                <div class="command-icon">
+                    <i class="fas fa-broom"></i>
+                </div>
+                <h3>Limpar Cache</h3>
+                <div class="command-code">
+                    <code>python manage.py clearcache</code>
+                    <button class="copy-btn" onclick="copyCommand('python manage.py clearcache')">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+                <p>Limpa o cache do sistema (se configurado)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configurações de Atualização -->
+        <div class="config-section">
+            <div class="section-header">
+                <h2><i class="fas fa-clock"></i> Configurações de Atualização Automática</h2>
+            </div>
+            <div class="update-settings">
+                <div class="setting-item active">
+                    <div class="setting-info">
+                        <h3>Atualização Automática via APScheduler</h3>
+                        <p>Sistema configurado para buscar notícias automaticamente a cada 1 hora</p>
+                    </div>
+                    <div class="setting-control">
+                        <span class="badge success">
+                            <i class="fas fa-check-circle"></i> ATIVO
+                        </span>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h3>Intervalo de Atualização</h3>
+                        <p>Frequência: A cada 1 hora (modificável em scheduler.py)</p>
+                    </div>
+                    <div class="setting-control">
+                        <span class="badge info">60 minutos</span>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-info">
+                        <h3>Compatibilidade</h3>
+                        <p>Funciona em Windows, Linux e Mac OS</p>
+                    </div>
+                    <div class="setting-control">
+                        <span class="badge info">
+                            <i class="fas fa-check"></i> Multiplataforma
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-note">
+                <i class="fas fa-info-circle"></i>
+                <p>
+                    <strong>Como funciona:</strong> O agendador APScheduler executa automaticamente <code>python manage.py update_news</code> 
+                    a cada 1 hora quando o servidor Django está rodando.
+                    <br><br>
+                    <strong>Para alterar a frequência:</strong> Edite o arquivo <code>news/scheduler.py</code> e ajuste o parâmetro <code>hours=1</code>.
+                    <br><br>
+                    <strong>Iniciando automaticamente:</strong> O agendador inicia automaticamente com o comando <code>python manage.py runserver</code>.
+                </p>
+            </div>
+        </div>
+
+    <!-- Links Rápidos -->
+    <div class="config-section">
+        <div class="section-header">
+            <h2><i class="fas fa-link"></i> Links Rápidos</h2>
+        </div>
+        <div class="quick-links">
+            <a href="/admin" class="quick-link-btn" target="_blank">
+                <i class="fas fa-user-shield"></i>
+                <span>Painel Admin</span>
+            </a>
+            <a href="{% url 'monitoramento' %}" class="quick-link-btn">
+                <i class="fas fa-list"></i>
+                <span>Ver Todas as Notícias</span>
+            </a>
+            <a href="{% url 'alertas' %}" class="quick-link-btn">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Alertas Críticos</span>
+            </a>
+            <a href="{% url 'relatorios' %}" class="quick-link-btn">
+                <i class="fas fa-chart-bar"></i>
+                <span>Relatórios</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyCommand(command) {
+    navigator.clipboard.writeText(command).then(() => {
+        // Feedback visual
+        const btn = event.currentTarget;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        btn.style.color = 'var(--cyber-green)';
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.style.color = '';
+        }, 2000);
+    });
+}
+</script>
+
+<style>
+    .config-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .config-section {
+        background: rgba(20, 25, 30, 0.8);
+        border: 1px solid rgba(0, 255, 136, 0.1);
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .info-item {
+        background: rgba(10, 15, 20, 0.8);
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 255, 136, 0.2);
+    }
+
+    .info-label {
+        display: block;
+        color: #888888;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+
+    .info-value {
+        display: block;
+        color: var(--cyber-green);
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .sources-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .source-item {
+        display: flex;
+        gap: 20px;
+        padding: 25px;
+        background: rgba(10, 15, 20, 0.8);
+        border: 1px solid rgba(0, 255, 136, 0.2);
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .source-item:hover {
+        border-color: var(--cyber-green);
+        transform: translateX(5px);
+    }
+
+    .source-status {
+        display: flex;
+        align-items: center;
+    }
+
+    .status-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        box-shadow: 0 0 10px currentColor;
+    }
+
+    .status-dot.active {
+        background: var(--cyber-green);
+        color: var(--cyber-green);
+    }
+
+    .source-info {
+        flex: 1;
+    }
+
+    .source-info h3 {
+        margin-bottom: 8px;
+        color: #ffffff;
+    }
+
+    .source-url {
+        color: var(--cyber-blue);
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+        font-family: monospace;
+    }
+
+    .source-description {
+        color: #aaaaaa;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .source-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .source-badge.active {
+        background: rgba(0, 255, 136, 0.2);
+        color: var(--cyber-green);
+        border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    .commands-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .command-card {
+        background: rgba(10, 15, 20, 0.8);
+        border: 1px solid rgba(0, 255, 136, 0.2);
+        border-radius: 10px;
+        padding: 25px;
+        transition: all 0.3s ease;
+    }
+
+    .command-card:hover {
+        border-color: var(--cyber-green);
+        transform: translateY(-5px);
+    }
+
+    .command-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, var(--cyber-green), var(--cyber-blue));
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--cyber-dark);
+        margin-bottom: 15px;
+    }
+
+    .command-card h3 {
+        margin-bottom: 15px;
+        color: #ffffff;
+    }
+
+    .command-code {
+        position: relative;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(0, 255, 136, 0.3);
+        border-radius: 6px;
+        padding: 12px 45px 12px 12px;
+        margin-bottom: 15px;
+    }
+
+    .command-code code {
+        color: var(--cyber-green);
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+    }
+
+    .copy-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #888888;
+        cursor: pointer;
+        padding: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .copy-btn:hover {
+        color: var(--cyber-green);
+    }
+
+    .command-card p {
+        color: #aaaaaa;
+        font-size: 0.9rem;
+        line-height: 1.6;
+    }
+
+    .update-settings {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .setting-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        background: rgba(10, 15, 20, 0.8);
+        border: 1px solid rgba(0, 255, 136, 0.2);
+        border-radius: 8px;
+        gap: 20px;
+    }
+
+    .setting-info h3 {
+        margin-bottom: 5px;
+        color: #ffffff;
+    }
+
+    .setting-info p {
+        color: #888888;
+        font-size: 0.9rem;
+    }
+
+    .badge {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .badge.info {
+        background: rgba(0, 204, 255, 0.2);
+        color: var(--cyber-blue);
+        border: 1px solid rgba(0, 204, 255, 0.3);
+    }
+
+    .config-note {
+        display: flex;
+        gap: 15px;
+        padding: 20px;
+        background: rgba(0, 204, 255, 0.1);
+        border: 1px solid rgba(0, 204, 255, 0.3);
+        border-radius: 8px;
+    }
+
+    .config-note i {
+        color: var(--cyber-blue);
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .config-note p {
+        color: #cccccc;
+        line-height: 1.6;
+    }
+
+    .config-note code {
+        background: rgba(0, 255, 136, 0.2);
+        color: var(--cyber-green);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-family: monospace;
+    }
+
+    .quick-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .quick-link-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 15px;
+        background: linear-gradient(135deg, var(--cyber-green), var(--cyber-blue));
+        color: var(--cyber-dark);
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .quick-link-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 255, 136, 0.4);
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .commands-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .source-item {
+            flex-direction: column;
+        }
+
+        .setting-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .quick-links {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

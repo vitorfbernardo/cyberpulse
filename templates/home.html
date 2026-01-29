@@ -1,0 +1,503 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - CyberPulse{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- Banner de boas-vindas -->
+    <div class="welcome-banner">
+        <div class="welcome-content">
+            <h1><i class="fas fa-shield-alt"></i> Bem-vindo ao CyberPulse</h1>
+            <p>Sistema de monitoramento 24/7 de notícias de cybersecurity</p>
+        </div>
+        <div class="welcome-stats">
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.total }}</span>
+                <span class="stat-label">Notícias Totais</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.last_24h }}</span>
+                <span class="stat-label">Últimas 24h</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ stats.last_7days }}</span>
+                <span class="stat-label">Últimos 7 Dias</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards principais -->
+    <div class="dashboard-grid">
+        <!-- Card de estatísticas por categoria -->
+        <div class="cyber-card">
+            <div class="card-header">
+                <h3><i class="fas fa-chart-pie"></i> Notícias por Categoria</h3>
+                <span class="card-badge success">ATIVO</span>
+            </div>
+            <div class="card-content">
+                <div class="category-list">
+                    {% for category_name, count in categories_count.items %}
+                    <div class="category-item">
+                        <span class="category-icon">
+                            {% if "Vulnerabilidade" in category_name %}
+                                🔓
+                            {% elif "Vazamento" in category_name %}
+                                ⚠️
+                            {% elif "Malware" in category_name %}
+                                🦠
+                            {% elif "Patch" in category_name %}
+                                🔧
+                            {% else %}
+                                📰
+                            {% endif %}
+                        </span>
+                        <span class="category-name">{{ category_name }}</span>
+                        <span class="category-count">{{ count }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de notícias recentes -->
+        <div class="cyber-card wide">
+            <div class="card-header">
+                <h3><i class="fas fa-newspaper"></i> Notícias Recentes (Últimos 7 dias)</h3>
+                <span class="card-badge info">{{ recent_news|length }} NOTÍCIAS</span>
+            </div>
+            <div class="card-content">
+                {% if recent_news %}
+                    <div class="news-list">
+                        {% for news in recent_news %}
+                        <div class="news-item">
+                            <span class="news-icon">{{ news.get_category_display_icon }}</span>
+                            <div class="news-details">
+                                <span class="news-title">{{ news.title }}</span>
+                                <div class="news-meta">
+                                    <span class="news-source">{{ news.source }}</span>
+                                    <span class="news-separator">•</span>
+                                    <span class="news-category">{{ news.get_category_display }}</span>
+                                    <span class="news-separator">•</span>
+                                    <span class="news-time">{{ news.published_date|timesince }} atrás</span>
+                                </div>
+                            </div>
+                            <a href="{{ news.link }}" target="_blank" class="news-link">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-news">
+                        <i class="fas fa-inbox"></i>
+                        <p>Nenhuma notícia encontrada nos últimos 7 dias</p>
+                        <p class="help-text">Execute: <code>python manage.py update_news</code></p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Card de ações rápidas -->
+        <div class="cyber-card">
+            <div class="card-header">
+                <h3><i class="fas fa-bolt"></i> Ações Rápidas</h3>
+            </div>
+            <div class="card-content">
+                <div class="quick-actions">
+                    <a href="{% url 'monitoramento' %}" class="cyber-btn small">
+                        <i class="fas fa-list"></i> Ver Todas
+                    </a>
+                    <a href="{% url 'alertas' %}" class="cyber-btn small">
+                        <i class="fas fa-exclamation-triangle"></i> Alertas
+                    </a>
+                    <a href="{% url 'relatorios' %}" class="cyber-btn small">
+                        <i class="fas fa-chart-bar"></i> Relatórios
+                    </a>
+                    <a href="{% url 'configuracoes' %}" class="cyber-btn small">
+                        <i class="fas fa-cog"></i> Configurações
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Últimas atividades -->
+    <div class="cyber-card">
+        <div class="card-header">
+            <h3><i class="fas fa-history"></i> Fontes de Notícias Monitoradas</h3>
+        </div>
+        <div class="card-content">
+            <div class="activity-list">
+                <div class="activity-item">
+                    <span class="activity-icon success"><i class="fas fa-check"></i></span>
+                    <div class="activity-details">
+                        <span class="activity-title">The Hacker News</span>
+                        <span class="activity-time">Notícias de segurança e vulnerabilidades</span>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-icon success"><i class="fas fa-check"></i></span>
+                    <div class="activity-details">
+                        <span class="activity-title">Bleeping Computer</span>
+                        <span class="activity-time">Análises técnicas e malware</span>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-icon success"><i class="fas fa-check"></i></span>
+                    <div class="activity-details">
+                        <span class="activity-title">Threatpost</span>
+                        <span class="activity-time">Inteligência de ameaças cibernéticas</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos específicos do dashboard */
+    .dashboard-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .welcome-banner {
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 255, 0.1));
+        border: 1px solid rgba(0, 255, 136, 0.2);
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .welcome-content h1 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        color: var(--cyber-green);
+    }
+
+    .welcome-content p {
+        color: #88ffcc;
+        opacity: 0.8;
+    }
+
+    .welcome-stats {
+        display: flex;
+        gap: 30px;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        display: block;
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: var(--cyber-green);
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.9rem;
+        color: #aaaaaa;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .cyber-card {
+        background: rgba(20, 25, 30, 0.8);
+        border: 1px solid rgba(0, 255, 136, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .cyber-card.wide {
+        grid-column: span 2;
+    }
+
+    .card-header {
+        background: rgba(10, 15, 20, 0.9);
+        padding: 20px;
+        border-bottom: 1px solid rgba(0, 255, 136, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-header h3 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.2rem;
+    }
+
+    .card-badge {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .card-badge.success {
+        background: rgba(0, 255, 136, 0.2);
+        color: var(--cyber-green);
+        border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    .card-badge.info {
+        background: rgba(0, 204, 255, 0.2);
+        color: var(--cyber-blue);
+        border: 1px solid rgba(0, 204, 255, 0.3);
+    }
+
+    .card-content {
+        padding: 20px;
+    }
+
+    .category-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .category-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 6px;
+        transition: all 0.3s ease;
+    }
+
+    .category-item:hover {
+        background: rgba(0, 255, 136, 0.05);
+        border-left: 3px solid var(--cyber-green);
+    }
+
+    .category-icon {
+        font-size: 1.5rem;
+    }
+
+    .category-name {
+        flex: 1;
+        font-weight: 500;
+    }
+
+    .category-count {
+        background: rgba(0, 255, 136, 0.2);
+        color: var(--cyber-green);
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .news-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .news-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .news-item:hover {
+        background: rgba(0, 255, 136, 0.05);
+        border-left: 3px solid var(--cyber-green);
+    }
+
+    .news-icon {
+        font-size: 1.5rem;
+        min-width: 30px;
+    }
+
+    .news-details {
+        flex: 1;
+    }
+
+    .news-title {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        line-height: 1.4;
+    }
+
+    .news-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #888888;
+        font-size: 0.85rem;
+    }
+
+    .news-source {
+        color: var(--cyber-blue);
+        font-weight: 500;
+    }
+
+    .news-separator {
+        opacity: 0.5;
+    }
+
+    .news-link {
+        color: var(--cyber-green);
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+    }
+
+    .news-link:hover {
+        color: var(--cyber-blue);
+        transform: scale(1.2);
+    }
+
+    .no-news {
+        text-align: center;
+        padding: 40px;
+        color: #888888;
+    }
+
+    .no-news i {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+    }
+
+    .no-news p {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+
+    .help-text {
+        color: var(--cyber-green);
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+
+    .quick-actions {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .cyber-btn.small {
+        padding: 12px;
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .activity-icon.success {
+        background: rgba(0, 255, 136, 0.2);
+        color: var(--cyber-green);
+        border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    .activity-details {
+        flex: 1;
+    }
+
+    .activity-title {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .activity-time {
+        color: #888888;
+        font-size: 0.85rem;
+    }
+
+    /* Responsividade */
+    @media (max-width: 1200px) {
+        .cyber-card.wide {
+            grid-column: span 1;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .welcome-banner {
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .welcome-stats {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .quick-actions {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Scrollbar personalizada */
+    .news-list::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .news-list::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+    }
+
+    .news-list::-webkit-scrollbar-thumb {
+        background: rgba(0, 255, 136, 0.3);
+        border-radius: 10px;
+    }
+
+    .news-list::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 255, 136, 0.5);
+    }
+</style>
+{% endblock %}

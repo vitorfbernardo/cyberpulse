@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+
+{% block title %}Alertas - CyberPulse{% endblock %}
+
+{% block content %}
+<div class="alerts-container">
+    <!-- Cabeçalho -->
+    <div class="page-header alert-header">
+        <div class="header-content">
+            <h1><i class="fas fa-exclamation-triangle"></i> Alertas de Segurança</h1>
+            <p>Vulnerabilidades críticas e ameaças recentes detectadas</p>
+        </div>
+        <div class="alert-stats">
+            <div class="stat-badge critical">
+                <i class="fas fa-skull-crossbones"></i>
+                <span>{{ critical_news|length }}</span>
+                <small>Críticos</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas Críticos -->
+    {% if critical_news %}
+        <div class="alerts-grid">
+            {% for article in critical_news %}
+            <div class="alert-card {{ article.category }}">
+                <div class="alert-card-header">
+                    <div class="alert-icon-wrapper">
+                        <span class="alert-icon">{{ article.get_category_display_icon }}</span>
+                    </div>
+                    <div class="alert-labels">
+                        <span class="alert-category-badge">{{ article.get_category_display }}</span>
+                        <span class="alert-priority">
+                            {% if article.category == 'breach' %}
+                                <i class="fas fa-exclamation-circle"></i> ALTA PRIORIDADE
+                            {% elif article.category == 'vulnerability' %}
+                                <i class="fas fa-shield-alt"></i> CRÍTICO
+                            {% elif article.category == 'malware' %}
+                                <i class="fas fa-virus"></i> AMEAÇA ATIVA
+                            {% else %}
+                                <i class="fas fa-info-circle"></i> IMPORTANTE
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="alert-card-body">
+                    <h3 class="alert-title">{{ article.title }}</h3>
+                    <p class="alert-description">{{ article.description|truncatewords:40 }}</p>
+                    
+                    <div class="alert-meta">
+                        <span class="meta-item">
+                            <i class="fas fa-newspaper"></i> {{ article.source }}
+                        </span>
+                        <span class="meta-item">
+                            <i class="fas fa-clock"></i> {{ article.published_date|timesince }} atrás
+                        </span>
+                    </div>
+                </div>
+
+                <div class="alert-card-footer">
+                    <a href="{{ article.link }}" target="_blank" class="alert-action-btn">
+                        <i class="fas fa-external-link-alt"></i> Ver Detalhes Completos
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-alerts">
+            <div class="no-alerts-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h2>Nenhum Alerta Crítico</h2>
+            <p>Não foram detectadas vulnerabilidades críticas nos últimos 7 dias</p>
+            <div class="no-alerts-actions">
+                <a href="{% url 'monitoramento' %}" class="cyber-btn">
+                    <i class="fas fa-list"></i> Ver Todas as Notícias
+                </a>
+                <a href="{% url 'home' %}" class="cyber-btn secondary">
+                    <i class="fas fa-home"></i> Voltar ao Dashboard
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Informações sobre Categorias de Alerta -->
+    <div class="alert-info-section">
+        <h2><i class="fas fa-info-circle"></i> Categorias de Alertas</h2>
+        <div class="category-info-grid">
+            <div class="category-info-card vulnerability">
+                <div class="category-info-icon">🔓</div>
+                <h3>Vulnerabilidades</h3>
+                <p>Falhas de segurança críticas que podem ser exploradas por atacantes</p>
+            </div>
+            <div class="category-info-card breach">
+                <div class="category-info-icon">⚠️</div>
+                <h3>Vazamentos de Dados</h3>
+                <p>Incidentes de exposição ou roubo de informações sensíveis</p>
+            </div>
+            <div class="category-info-card malware">
+                <div class="category-info-icon">🦠</div>
+                <h3>Malware</h3>
+                <p>Softwares maliciosos incluindo ransomware, trojans e vírus</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .alerts-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .alert-header {
+        background: linear-gradient(135deg, rgba(255, 50, 50, 0.15), rgba(255, 100, 0, 0.15));
+        border: 1px solid rgba(255, 50, 50, 0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .alert-header h1 {
+        color: #ff5555;
+    }
+
+    .alert-header p {
+        color: #ffaaaa;
+    }
+
+    .alert-stats {
+        display: flex;
+        gap: 20px;
+    }
+
+    .stat-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 15px 25px;
+        background: rgba(255, 50, 50, 0.2);
+        border: 1px solid rgba(255, 50, 50, 0.4);
+        border-radius: 10px;
+    }
+
+    .stat-badge.critical {
+        color: #ff3333;
+    }
+
+    .stat-badge i {
+        font-size: 2rem;
+    }
+
+    .stat-badge span {
+        font-size: 2.5rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .stat-badge small {
+        font-size: 0.85rem;
+        opacity: 0.8;
+    }
+
+    .alerts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 25px;
+        margin-top: 30px;
+    }
+
+    .alert-card {
+        background: rgba(20, 25, 30, 0.9);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+    }
+
+    .alert-card.vulnerability {
+        border-color: rgba(255, 100, 0, 0.3);
+    }
+
+    .alert-card.breach {
+        border-color: rgba(255, 50, 50, 0.3);
+    }
+
+    .alert-card.malware {
+        border-color: rgba(255, 0, 255, 0.3);
+    }
+
+    .alert-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(255, 50, 50, 0.3);
+    }
+
+    .alert-card-header {
+        background: rgba(10, 15, 20, 0.9);
+        padding: 20px;
+        display: flex;
+        gap: 15px;
+        align-items: flex-start;
+    }
+
+    .alert-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(135deg, rgba(255, 50, 50, 0.3), rgba(255, 100, 0, 0.3));
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+    }
+
+    .alert-labels {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .alert-category-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: rgba(255, 100, 0, 0.2);
+        color: #ff6600;
+        border: 1px solid rgba(255, 100, 0, 0.3);
+        width: fit-content;
+    }
+
+    .alert-priority {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #ff3333;
+        text-transform: uppercase;
+    }
+
+    .alert-card-body {
+        padding: 25px;
+    }
+
+    .alert-title {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        line-height: 1.4;
+        color: #ffffff;
+    }
+
+    .alert-description {
+        color: #cccccc;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+
+    .alert-meta {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #888888;
+        font-size: 0.9rem;
+    }
+
+    .meta-item i {
+        color: var(--cyber-green);
+    }
+
+    .alert-card-footer {
+        padding: 20px 25px;
+        background: rgba(10, 15, 20, 0.7);
+        border-top: 1px solid rgba(255, 50, 50, 0.2);
+    }
+
+    .alert-action-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #ff3333, #ff6600);
+        color: #ffffff;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .alert-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(255, 50, 50, 0.5);
+    }
+
+    .no-alerts {
+        text-align: center;
+        padding: 80px 20px;
+        background: rgba(20, 25, 30, 0.5);
+        border: 1px solid rgba(0, 255, 136, 0.1);
+        border-radius: 12px;
+        margin-top: 30px;
+    }
+
+    .no-alerts-icon {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 30px;
+        background: linear-gradient(135deg, rgba(0, 255, 136, 0.2), rgba(0, 204, 255, 0.2));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .no-alerts-icon i {
+        font-size: 4rem;
+        color: var(--cyber-green);
+    }
+
+    .no-alerts h2 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: var(--cyber-green);
+    }
+
+    .no-alerts p {
+        color: #aaaaaa;
+        font-size: 1.1rem;
+        margin-bottom: 30px;
+    }
+
+    .no-alerts-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .cyber-btn {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, var(--cyber-green), var(--cyber-blue));
+        color: var(--cyber-dark);
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .cyber-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 255, 136, 0.4);
+    }
+
+    .cyber-btn.secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #ffffff;
+        border: 1px solid rgba(0, 255, 136, 0.3);
+    }
+
+    .alert-info-section {
+        margin-top: 50px;
+        padding: 30px;
+        background: rgba(20, 25, 30, 0.5);
+        border: 1px solid rgba(0, 255, 136, 0.1);
+        border-radius: 12px;
+    }
+
+    .alert-info-section h2 {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 25px;
+        color: var(--cyber-green);
+    }
+
+    .category-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+    }
+
+    .category-info-card {
+        padding: 25px;
+        border-radius: 10px;
+        border: 1px solid rgba(0, 255, 136, 0.2);
+        background: rgba(10, 15, 20, 0.5);
+        transition: all 0.3s ease;
+    }
+
+    .category-info-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--cyber-green);
+    }
+
+    .category-info-card.vulnerability {
+        border-color: rgba(255, 100, 0, 0.3);
+    }
+
+    .category-info-card.breach {
+        border-color: rgba(255, 50, 50, 0.3);
+    }
+
+    .category-info-card.malware {
+        border-color: rgba(255, 0, 255, 0.3);
+    }
+
+    .category-info-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+    }
+
+    .category-info-card h3 {
+        margin-bottom: 10px;
+        font-size: 1.3rem;
+    }
+
+    .category-info-card p {
+        color: #aaaaaa;
+        line-height: 1.6;
+    }
+
+    /* Responsividade */
+    @media (max-width: 768px) {
+        .alert-header {
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .alerts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .no-alerts-actions {
+            flex-direction: column;
+        }
+
+        .cyber-btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,310 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CyberPulse{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/cyberpulse.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Estilos adicionais para status dinâmico */
+        .status-online {
+            color: var(--cyber-green, #00ff88) !important;
+            animation: pulse-green 2s ease-in-out infinite;
+        }
+
+        .status-offline {
+            color: #ff3333 !important;
+        }
+
+        .status-success {
+            color: var(--cyber-green, #00ff88) !important;
+        }
+
+        .status-warning {
+            color: #ffaa00 !important;
+            animation: blink-warning 1.5s ease-in-out infinite;
+        }
+
+        .status-danger {
+            color: #ff3333 !important;
+            animation: blink-red 1.5s ease-in-out infinite;
+        }
+
+        .status-info {
+            color: var(--cyber-blue, #00ccff) !important;
+        }
+
+        .text-success {
+            color: var(--cyber-green, #00ff88) !important;
+            font-weight: 600;
+        }
+
+        .text-danger {
+            color: #ff3333 !important;
+            font-weight: 600;
+        }
+
+        .text-warning {
+            color: #ffaa00 !important;
+            font-weight: 600;
+        }
+
+        .threat-low,
+        .threat-success {
+            color: var(--cyber-green, #00ff88) !important;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .threat-medium,
+        .threat-warning {
+            color: #ffaa00 !important;
+            text-shadow: 0 0 10px rgba(255, 170, 0, 0.5);
+        }
+
+        .threat-high,
+        .threat-danger {
+            color: #ff3333 !important;
+            text-shadow: 0 0 10px rgba(255, 51, 51, 0.5);
+            animation: blink-red 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-green {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes blink-red {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        @keyframes blink-warning {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .status-dot.active {
+            background: var(--cyber-green, #00ff88);
+            box-shadow: 0 0 10px var(--cyber-green, #00ff88);
+        }
+
+        .status-dot.warning {
+            background: #ffaa00;
+            box-shadow: 0 0 10px #ffaa00;
+        }
+
+        .status-dot.danger {
+            background: #ff3333;
+            box-shadow: 0 0 10px #ff3333;
+        }
+
+        .status-dot.inactive {
+            background: #666;
+            box-shadow: none;
+        }
+
+        /* User menu dropdown */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: rgba(255, 50, 50, 0.2);
+            border: 1px solid rgba(255, 50, 50, 0.4);
+            border-radius: 6px;
+            color: #ff3333;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 50, 50, 0.4);
+            border-color: #ff3333;
+            transform: translateY(-2px);
+        }
+
+
+            
+    
+    /* Logo Image */
+    .logo-image {
+        height: 50px;
+        width: auto;
+        transition: transform 0.3s ease, filter 0.3s ease;
+        filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.5));
+    }
+
+    .logo-image:hover {
+        transform: scale(1.08);
+        filter: drop-shadow(0 0 15px rgba(0, 255, 136, 0.8));
+    }
+
+    .logo-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+    }
+
+
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="cyber-body">
+    <!-- Header CyberPulse -->
+    <header class="cyber-header">
+        <div class="header-container">
+            <!-- Logo pequeno -->
+            <div class="header-logo">
+            <a href="/" class="logo-link">
+                <img src="{% static 'images/logo.png' %}" alt="CyberPulse" class="logo-image">
+            </a>
+        </div>
+
+            <!-- Menu principal -->
+            <nav class="cyber-nav">
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link">
+                            <i class="fas fa-dashboard"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'busca' %}" class="nav-link">
+                            <i class="fas fa-search"></i>
+                            <span>Busca</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/monitoramento/" class="nav-link">
+                            <i class="fas fa-shield-alt"></i>
+                            <span>Monitoramento</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/alertas/" class="nav-link">
+                            <i class="fas fa-bell"></i>
+                            <span>Alertas</span>
+                            <span class="badge">3</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/relatorios/" class="nav-link">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Relatórios</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/configuracoes/" class="nav-link">
+                            <i class="fas fa-cog"></i>
+                            <span>Configurações</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Usuário e notificações -->
+            <div class="header-user">
+                <div class="notifications">
+                    <button class="notif-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notif-count">5</span>
+                    </button>
+                </div>
+                
+                <div class="user-menu">
+                    <div class="user-profile">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-secret"></i>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">{{ user.username|default:"Administrador" }}</span>
+                            <span class="user-role">Administrador do Sistema</span>
+                        </div>
+                    </div>
+                    
+                    {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'logout' %}" style="display: inline; margin: 0;">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-btn" style="border: none; cursor: pointer;">
+                            <i class="fas fa-sign-out-alt"></i> Sair
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Barra de status DINÂMICA -->
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="status-dot {% if system_status.online %}active{% else %}inactive{% endif %}"></span>
+                <span>Sistema: 
+                    <strong class="{% if system_status.online %}status-online{% else %}status-offline{% endif %}">
+                        {% if system_status.online %}ONLINE{% else %}OFFLINE{% endif %}
+                    </strong>
+                </span>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-dot {{ system_status.threat_color }}"></span>
+                <span>Threat Level: 
+                    <strong class="threat-{{ system_status.threat_color }}">
+                        {{ system_status.threat_level }}
+                    </strong>
+                </span>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-dot {% if system_status.last_scan == 'AGORA' or 'min' in system_status.last_scan %}active{% else %}warning{% endif %}"></span>
+                <span>Última varredura: 
+                    <strong>{{ system_status.last_scan }}</strong>
+                </span>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-dot {% if system_status.protection_active %}active{% else %}warning{% endif %}"></span>
+                <span>Proteção: 
+                    <strong class="{% if system_status.protection_active %}text-success{% else %}text-warning{% endif %}">
+                        {{ system_status.protection_percent }}% {% if system_status.protection_active %}ATIVA{% else %}PARCIAL{% endif %}
+                    </strong>
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Conteúdo principal -->
+    <main class="cyber-main">
+        {% block content %}
+        <!-- O conteúdo específico de cada página vai aqui -->
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="cyber-footer">
+        <div class="footer-content">
+            <p>© 2026 CyberPulse Security Systems. Todos os direitos reservados.</p>
+            <p class="footer-links">
+                <a href="#"><i class="fas fa-shield-alt"></i> Segurança</a> |
+                <a href="#"><i class="fas fa-headset"></i> Suporte</a> |
+                <a href="#"><i class="fas fa-file-contract"></i> Termos</a> |
+                <a href="#"><i class="fas fa-lock"></i> Privacidade</a>
+            </p>
+        </div>
+    </footer>
+
+    <script src="{% static 'js/cyberpulse.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+
+    
+</body>
+</html>
