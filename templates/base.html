@@ -228,7 +228,15 @@
                         </div>
                         <div class="user-info">
                             <span class="user-name">{{ user.username|default:"Administrador" }}</span>
-                            <span class="user-role">Administrador do Sistema</span>
+                            <span class="user-role">
+                                {% if user.is_superuser %}
+                                    Administrador do Sistema
+                                {% elif user.is_staff %}
+                                    Analista de Segurança
+                                {% else %}
+                                    Usuário Convidado
+                                {% endif %}
+                            </span>
                         </div>
                     </div>
                     
