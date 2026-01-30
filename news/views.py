@@ -7,6 +7,9 @@ from django.db.models import Count
 from django.db.models.functions import TruncDate
 import requests
 import json
+from .threat_intel import threat_intel_client
+from django.contrib.auth.decorators import login_required
+import re
 
 # Imports dos modelos
 from .models import NewsArticle
@@ -270,9 +273,7 @@ def busca(request):
 
 # ==================== THREAT INTELLIGENCE ====================
 
-from .threat_intel import threat_intel_client
-from django.contrib.auth.decorators import login_required
-import re
+
 
 @login_required
 def threat_intel_view(request):
