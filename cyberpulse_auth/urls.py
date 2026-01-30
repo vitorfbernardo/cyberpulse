@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from django.contrib.auth import views as auth_views
-from news.views import home, monitoramento, alertas, relatorios, configuracoes, busca
+from news.views import home, monitoramento, alertas, relatorios, configuracoes, busca, threat_intel_view
 
 urlpatterns = [
     # Página inicial
@@ -11,7 +11,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     
     # Login personalizado (URL SIMPLIFICADA!)
-    path('login/',  # ✅ Mudou de 'accounts/login/' para 'login/'
+    path('login/',
          auth_views.LoginView.as_view(
              template_name='registration/login.html',
              redirect_authenticated_user=True
@@ -19,7 +19,7 @@ urlpatterns = [
          name='login'),
     
     # Logout
-    path('logout/',  # ✅ Mudou de 'accounts/logout/' para 'logout/'
+    path('logout/',
          auth_views.LogoutView.as_view(), 
          name='logout'),
     
@@ -29,4 +29,5 @@ urlpatterns = [
     path('relatorios/', relatorios, name='relatorios'),
     path('configuracoes/', configuracoes, name='configuracoes'),
     path('busca/', busca, name='busca'),
+    path('threat-intel/', threat_intel_view, name='threat_intel'),
 ]
