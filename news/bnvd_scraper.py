@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
 import logging
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -10,22 +11,35 @@ class BNVDClient:
     """
     Cliente para o Banco Nacional de Vulnerabilidades (BNVD)
     Usa scraping da página de busca + API para listagem
+    COM FALLBACK PARA NVD EM CASO DE ERRO 403
     """
     BASE_URL = "https://bnvd.org"
     API_URL = f"{BASE_URL}/api/v1/vulnerabilities"
     SEARCH_URL = f"{BASE_URL}/busca"
+    NVD_API_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0"
     
     def __init__(self):
         self.session = requests.Session()
+        # Headers completos para simular navegador real
         self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Referer': 'https://bnvd.org/',
+            'Origin': 'https://bnvd.org',
+            'Connection': 'keep-alive',
+            'DNT': '1',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'same-origin',
+            'Cache-Control': 'max-age=0',
         })
     
     def search_vulnerabilities(self, query="", limit=20):
         """
-        Busca vulnerabilidades no BNVD
+        Busca vulnerabilidades no BNVD com fallback para NVD
         
         Args:
             query (str): Termo de busca (CVE ID, produto, keyword)
@@ -35,18 +49,36 @@ class BNVDClient:
             list: Lista de dicionários com dados das vulnerabilidades
         """
         try:
+            # Delay de 1 segundo antes de fazer requisição
+            time.sleep(1)
+            
             # Se for um CVE ID específico, usar página de busca
             if query and query.upper().startswith('CVE-'):
                 result = self._search_by_cve_web(query)
                 if result:
                     return [result]
                 else:
-                    # Fallback: buscar na API
+                    # Fallback: tentar NVD
+                    logger.warning(f"BNVD falhou para {query}, tentando NVD...")
+                    nvd_result = self._fallback_nvd(query)
+                    if nvd_result:
+                        return [nvd_result]
+                    # Se NVD também falhar, buscar na API do BNVD
                     return self._search_api(query="", limit=limit)
             else:
                 # Buscar na API para listagem geral
                 return self._search_api(query=query, limit=limit)
             
+        except requests.exceptions.HTTPError as e:
+            if e.response.status_code == 403:
+                logger.warning(f"Erro 403 no BNVD, usando fallback NVD para {query}")
+                # Fallback para NVD em caso de 403
+                if query and query.upper().startswith('CVE-'):
+                    nvd_result = self._fallback_nvd(query)
+                    if nvd_result:
+                        return [nvd_result]
+            logger.error(f"Erro HTTP ao buscar no BNVD: {e}")
+            return []
         except Exception as e:
             logger.error(f"Erro ao buscar no BNVD: {e}")
             return []
@@ -68,6 +100,9 @@ class BNVDClient:
         Busca um CVE específico via scraping da página web
         """
         try:
+            # Delay antes da requisição
+            time.sleep(1)
+            
             cve_id_clean = cve_id.upper().strip()
             
             # Parâmetros para busca
@@ -79,7 +114,7 @@ class BNVDClient:
                 'ordem': 'desc'
             }
             
-            response = self.session.get(self.SEARCH_URL, params=params, timeout=15)
+            response = self.session.get(self.SEARCH_URL, params=params, timeout=30)
             response.raise_for_status()
             
             # Parse HTML
@@ -88,21 +123,17 @@ class BNVDClient:
             # CORREÇÃO: Procurar por cards com a classe correta
             all_cards = soup.find_all('div', class_='card')
             
-            
-            
             # Procurar o card que contém o CVE ID
             target_card = None
             for card in all_cards:
                 card_text = card.get_text()
                 if cve_id_clean in card_text:
-                    
                     target_card = card
                     break
             
             if target_card:
                 return self._process_web_card(target_card, cve_id_clean)
             else:
-                
                 # Fallback: extrair do texto
                 if cve_id_clean in response.text:
                     return self._extract_from_text(response.text, cve_id_clean)
@@ -146,7 +177,7 @@ class BNVDClient:
             detail_link = f"{self.BASE_URL}/vulnerabilidade/{cve_id}"
             
             try:
-                detail_response = self.session.get(detail_link, timeout=15)
+                detail_response = self.session.get(detail_link, timeout=30)
                 
                 if detail_response.status_code == 200:
                     detail_soup = BeautifulSoup(detail_response.content, 'html.parser')
@@ -296,9 +327,12 @@ class BNVDClient:
         Busca vulnerabilidades via API (para listagem geral)
         """
         try:
+            # Delay antes da requisição
+            time.sleep(1)
+            
             params = {'limit': min(limit, 100)}
             
-            response = self.session.get(self.API_URL, params=params, timeout=15)
+            response = self.session.get(self.API_URL, params=params, timeout=30)
             response.raise_for_status()
             
             data = response.json()
@@ -386,6 +420,123 @@ class BNVDClient:
             
         except Exception as e:
             logger.error(f"Erro ao processar API: {e}")
+            return None
+    
+    def _fallback_nvd(self, cve_id):
+        """
+        NOVO: Busca no NVD (National Vulnerability Database) como fallback
+        quando BNVD está inacessível (erro 403 ou outros)
+        """
+        try:
+            logger.info(f"Buscando {cve_id} no NVD (fallback)...")
+            
+            # Delay antes da requisição
+            time.sleep(1)
+            
+            cve_id_clean = cve_id.upper().strip()
+            
+            params = {'cveId': cve_id_clean}
+            
+            # Headers específicos para NVD
+            nvd_headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'application/json',
+            }
+            
+            response = requests.get(
+                self.NVD_API_URL,
+                params=params,
+                headers=nvd_headers,
+                timeout=30
+            )
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            # Verificar se encontrou vulnerabilidades
+            vulnerabilities = data.get('vulnerabilities', [])
+            if not vulnerabilities:
+                logger.warning(f"CVE {cve_id_clean} não encontrado no NVD")
+                return None
+            
+            # Pegar primeira vulnerabilidade
+            vuln_data = vulnerabilities[0].get('cve', {})
+            
+            # Extrair descrição (inglês)
+            description = ''
+            descriptions = vuln_data.get('descriptions', [])
+            for desc in descriptions:
+                if desc.get('lang') == 'en':
+                    description = desc.get('value', '')
+                    break
+            
+            # Extrair CVSS Score e Severidade
+            cvss_score = 'N/A'
+            severity = 'N/A'
+            
+            metrics = vuln_data.get('metrics', {})
+            
+            # Tentar CVSS v3.1 primeiro
+            if 'cvssMetricV31' in metrics and metrics['cvssMetricV31']:
+                cvss_data = metrics['cvssMetricV31'][0].get('cvssData', {})
+                cvss_score = cvss_data.get('baseScore', 'N/A')
+                severity = cvss_data.get('baseSeverity', 'N/A')
+            # Fallback para CVSS v3.0
+            elif 'cvssMetricV30' in metrics and metrics['cvssMetricV30']:
+                cvss_data = metrics['cvssMetricV30'][0].get('cvssData', {})
+                cvss_score = cvss_data.get('baseScore', 'N/A')
+                severity = cvss_data.get('baseSeverity', 'N/A')
+            # Fallback para CVSS v2.0
+            elif 'cvssMetricV2' in metrics and metrics['cvssMetricV2']:
+                cvss_data = metrics['cvssMetricV2'][0].get('cvssData', {})
+                cvss_score = cvss_data.get('baseScore', 'N/A')
+                severity = cvss_data.get('baseSeverity', 'N/A')
+            
+            # Traduzir severidade pra português
+            severity_pt = {
+                'LOW': 'BAIXO',
+                'MEDIUM': 'MÉDIO',
+                'HIGH': 'ALTO',
+                'CRITICAL': 'CRÍTICO'
+            }.get(str(severity).upper(), severity)
+            
+            # Extrair data de publicação
+            pub_date = vuln_data.get('published', '')
+            if pub_date:
+                try:
+                    pub_date_obj = datetime.fromisoformat(pub_date.replace('Z', '+00:00'))
+                    pub_date = pub_date_obj.strftime('%Y-%m-%d')
+                except:
+                    pub_date = str(pub_date)[:10]
+            else:
+                pub_date = datetime.now().strftime('%Y-%m-%d')
+            
+            # Extrair CWE
+            weaknesses = vuln_data.get('weaknesses', [])
+            cwe_list = []
+            for weakness in weaknesses:
+                descriptions = weakness.get('description', [])
+                for desc in descriptions:
+                    cwe_value = desc.get('value', '')
+                    if cwe_value.startswith('CWE-'):
+                        cwe_list.append(cwe_value)
+            
+            return {
+                'cve_id': cve_id_clean,
+                'title': f"{cve_id_clean} - {severity_pt}",
+                'description': description if description else f"Vulnerabilidade {cve_id_clean} (NVD)",
+                'severity': severity_pt,
+                'cvss_score': cvss_score,
+                'cwe': ', '.join(cwe_list[:3]) if cwe_list else 'N/A',
+                'link': f"https://nvd.nist.gov/vuln/detail/{cve_id_clean}",
+                'source': '🇺🇸 NVD',  # Indicador de que veio do fallback
+                'published_date': pub_date,
+                'category': 'vulnerability',
+                'has_portuguese': False,  # NVD é em inglês
+            }
+            
+        except Exception as e:
+            logger.error(f"Erro ao buscar {cve_id} no NVD (fallback): {e}")
             return None
 
 
