@@ -147,3 +147,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
+ABUSEIPDB_API_KEY = os.environ.get('ABUSEIPDB_API_KEY', '')
+OTX_API_KEY = os.environ.get('OTX_API_KEY', '')
+IPGEOLOCATION_API_KEY = os.environ.get('IPGEOLOCATION_API_KEY', '')
+VIRUSTOTAL_API_KEY = os.environ.get('VIRUSTOTAL_API_KEY', '')

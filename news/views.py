@@ -267,3 +267,74 @@ def busca(request):
     }
     
     return render(request, 'busca.html', context)
+
+# ==================== THREAT INTELLIGENCE ====================
+
+from .threat_intel import threat_intel_client
+from django.contrib.auth.decorators import login_required
+import re
+
+@login_required
+def threat_intel_view(request):
+    """
+    View para Threat Intelligence
+    """
+    context = {
+        'result': None,
+        'query': '',
+        'query_type': ''
+    }
+    
+    if request.method == 'POST':
+        query = request.POST.get('query', '').strip()
+        query_type = request.POST.get('query_type', 'auto')
+        
+        if query:
+            context['query'] = query
+            
+            # Auto-detectar tipo se não especificado
+            if query_type == 'auto':
+                query_type = detect_query_type(query)
+            
+            context['query_type'] = query_type
+            
+            # Executar análise baseada no tipo
+            if query_type == 'ip':
+                result = threat_intel_client.analyze_ip(query)
+            elif query_type == 'hash':
+                result = threat_intel_client.analyze_hash(query)
+            elif query_type == 'domain':
+                result = threat_intel_client.analyze_domain(query)
+            else:
+                result = {'error': 'Tipo de consulta não reconhecido'}
+            
+            context['result'] = result
+    
+    return render(request, 'threat_intel.html', context)
+
+
+def detect_query_type(query):
+    """
+    Detecta automaticamente o tipo de consulta
+    """
+    query_clean = query.strip()
+    
+    # IPv4
+    ipv4_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+    if re.match(ipv4_pattern, query_clean):
+        return 'ip'
+    
+    # Hash (MD5: 32, SHA1: 40, SHA256: 64)
+    if re.match(r'^[a-fA-F0-9]{32}$', query_clean):
+        return 'hash'  # MD5
+    if re.match(r'^[a-fA-F0-9]{40}$', query_clean):
+        return 'hash'  # SHA1
+    if re.match(r'^[a-fA-F0-9]{64}$', query_clean):
+        return 'hash'  # SHA256
+    
+    # Domain
+    domain_pattern = r'^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z]{2,})+$'
+    if re.match(domain_pattern, query_clean):
+        return 'domain'
+    
+    return 'unknown'

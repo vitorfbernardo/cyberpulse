@@ -8,4 +8,5 @@ urlpatterns = [
     path('relatorios/', views.relatorios, name='relatorios'),
     path('configuracoes/', views.configuracoes, name='configuracoes'),
     path('busca/', views.busca, name='busca'),  # ← DEVE TER ESTA LINHA!
+    path('threat-intel/', views.threat_intel_view, name='threat_intel'),
 ]

@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Threat Intelligence - CyberPulse{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-shield-virus me-2"></i>
+                    Threat Intelligence
+                </h1>
+                <p class="text-muted">Consulta integrada de IPs, Hashes e Domínios em múltiplas fontes</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário de Busca -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <form method="post" id="threatIntelForm">
+                        {% csrf_token %}
+                        
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <label for="query_type" class="form-label">Tipo de Indicador</label>
+                                <select class="form-select" id="query_type" name="query_type">
+                                    <option value="auto" selected>🔍 Detecção Automática</option>
+                                    <option value="ip">📍 IP Address</option>
+                                    <option value="hash">#️⃣ Hash (MD5/SHA256)</option>
+                                    <option value="domain">🌐 Domain</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-7">
+                                <label for="query" class="form-label">Indicador</label>
+                                <input 
+                                    type="text" 
+                                    class="form-control" 
+                                    id="query" 
+                                    name="query" 
+                                    placeholder="Ex: 185.220.101.15 ou d41d8cd98f00b204e9800998ecf8427e"
+                                    value="{{ query }}"
+                                    required
+                                >
+                                <small class="form-text text-muted">
+                                    Suporta: IPv4, MD5, SHA1, SHA256, Domínios
+                                </small>
+                            </div>
+                            
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search me-2"></i>
+                                    Analisar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    {% if result %}
+    <div class="row">
+        <div class="col-12">
+            
+            <!-- Erro -->
+            {% if result.error %}
+            <div class="alert alert-danger" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                {{ result.error }}
+            </div>
+            {% endif %}
+
+            <!-- RESULTADO: IP -->
+            {% if result.type == 'ip' %}
+            
+            <!-- Geolocalização -->
+            {% if result.geolocation %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Geolocalização</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>País:</strong> {{ result.geolocation.country }} ({{ result.geolocation.country_code }})</p>
+                            <p><strong>Região:</strong> {{ result.geolocation.region }}</p>
+                            <p><strong>Cidade:</strong> {{ result.geolocation.city }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>ISP:</strong> {{ result.geolocation.isp }}</p>
+                            <p><strong>Organização:</strong> {{ result.geolocation.org }}</p>
+                            {% if result.geolocation.as %}
+                            <p><strong>AS:</strong> {{ result.geolocation.as }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Reputação -->
+            {% if result.reputation %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-header" style="background-color: 
+                    {% if result.reputation.score >= 80 %}#dc3545{% elif result.reputation.score >= 50 %}#ffc107{% else %}#28a745{% endif %}; color: white;">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Reputação - {{ result.reputation.risk_level }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <h2 class="display-4">{{ result.reputation.risk_color }} {{ result.reputation.score }}/100</h2>
+                            <p class="text-muted">Score de Risco</p>
+                        </div>
+                        <div class="col-md-8">
+                            <p><strong>Total de Reportes:</strong> {{ result.reputation.total_reports }}</p>
+                            <p><strong>Usuários Distintos:</strong> {{ result.reputation.num_distinct_users }}</p>
+                            <p><strong>Último Reporte:</strong> {{ result.reputation.last_reported }}</p>
+                            <p><strong>Tipo de Uso:</strong> {{ result.reputation.usage_type }}</p>
+                            {% if result.reputation.is_whitelisted %}
+                            <span class="badge bg-success">✅ Whitelisted</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Threat Intelligence -->
+            {% if result.threat_intel %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-brain me-2"></i>Threat Intelligence</h5>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- AlienVault OTX -->
+                    {% if result.threat_intel.otx %}
+                    <div class="mb-3">
+                        <h6><strong>🔷 AlienVault OTX:</strong></h6>
+                        {% if result.threat_intel.otx.found %}
+                        <p class="text-success">✅ Encontrado em {{ result.threat_intel.otx.pulse_count }} pulse(s)</p>
+                        {% else %}
+                        <p class="text-muted">⚪ Não encontrado</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- VirusTotal -->
+                    {% if result.threat_intel.virustotal %}
+                    <div class="mb-3">
+                        <h6><strong>🦠 VirusTotal:</strong></h6>
+                        <p>
+                            <strong>Detecções:</strong> 
+                            <span class="badge {% if result.threat_intel.virustotal.malicious > 0 %}bg-danger{% else %}bg-success{% endif %}">
+                                {{ result.threat_intel.virustotal.detection_rate }}
+                            </span>
+                        </p>
+                        <p>
+                            Malicioso: {{ result.threat_intel.virustotal.malicious }} | 
+                            Suspeito: {{ result.threat_intel.virustotal.suspicious }} | 
+                            Limpo: {{ result.threat_intel.virustotal.harmless }}
+                        </p>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- RESULTADO: HASH -->
+            {% elif result.type == 'hash' %}
+            
+            <div class="alert alert-info">
+                <strong>Hash Type:</strong> {{ result.hash_type }}
+            </div>
+
+            <!-- Threat Intelligence -->
+            {% if result.threat_intel %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-virus me-2"></i>Análise de Malware</h5>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- Abuse.ch MalwareBazaar -->
+                    {% if result.threat_intel.abuse_ch %}
+                    <div class="mb-3">
+                        <h6><strong>🔶 Abuse.ch MalwareBazaar:</strong></h6>
+                        {% if result.threat_intel.abuse_ch.found %}
+                        <div class="alert alert-danger">
+                            <p><strong>⚠️ MALWARE IDENTIFICADO!</strong></p>
+                            <p><strong>Assinatura:</strong> {{ result.threat_intel.abuse_ch.signature }}</p>
+                            <p><strong>Tipo:</strong> {{ result.threat_intel.abuse_ch.file_type }}</p>
+                            <p><strong>Tamanho:</strong> {{ result.threat_intel.abuse_ch.file_size }} bytes</p>
+                            <p><strong>Primeira vez visto:</strong> {{ result.threat_intel.abuse_ch.first_seen }}</p>
+                            <p><strong>Última vez visto:</strong> {{ result.threat_intel.abuse_ch.last_seen }}</p>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">⚪ Não encontrado</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- AlienVault OTX -->
+                    {% if result.threat_intel.otx %}
+                    <div class="mb-3">
+                        <h6><strong>🔷 AlienVault OTX:</strong></h6>
+                        {% if result.threat_intel.otx.found %}
+                        <p class="text-warning">⚠️ Encontrado em {{ result.threat_intel.otx.pulse_count }} pulse(s)</p>
+                        {% if result.threat_intel.otx.pulses %}
+                        <ul>
+                            {% for pulse in result.threat_intel.otx.pulses %}
+                            <li>{{ pulse }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        {% else %}
+                        <p class="text-muted">⚪ Não encontrado</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- VirusTotal -->
+                    {% if result.threat_intel.virustotal %}
+                    <div class="mb-3">
+                        <h6><strong>🦠 VirusTotal:</strong></h6>
+                        <p>
+                            <strong>Detecções:</strong> 
+                            <span class="badge {% if result.threat_intel.virustotal.malicious > 0 %}bg-danger{% else %}bg-success{% endif %}" style="font-size: 1.1em;">
+                                {{ result.threat_intel.virustotal.detection_rate }}
+                            </span>
+                        </p>
+                        <p>
+                            Malicioso: {{ result.threat_intel.virustotal.malicious }} | 
+                            Suspeito: {{ result.threat_intel.virustotal.suspicious }} | 
+                            Limpo: {{ result.threat_intel.virustotal.harmless }} | 
+                            Não detectado: {{ result.threat_intel.virustotal.undetected }}
+                        </p>
+                        {% if result.threat_intel.virustotal.names %}
+                        <p><strong>Nomes de arquivo:</strong></p>
+                        <ul>
+                            {% for name in result.threat_intel.virustotal.names %}
+                            <li>{{ name }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+
+            <!-- Famílias de Malware -->
+            {% if result.malware_families %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-bug me-2"></i>Famílias de Malware Identificadas</h5>
+                </div>
+                <div class="card-body">
+                    {% for family in result.malware_families %}
+                    <span class="badge bg-danger me-2 mb-2" style="font-size: 0.95em;">{{ family }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- RESULTADO: DOMAIN -->
+            {% elif result.type == 'domain' %}
+            
+            <div class="card shadow-sm mb-3">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-globe me-2"></i>Análise de Domínio</h5>
+                </div>
+                <div class="card-body">
+                    
+                    <!-- VirusTotal -->
+                    {% if result.threat_intel.virustotal %}
+                    <div class="mb-3">
+                        <h6><strong>🦠 VirusTotal:</strong></h6>
+                        <p>
+                            <strong>Detecções:</strong> 
+                            <span class="badge {% if result.threat_intel.virustotal.malicious > 0 %}bg-danger{% else %}bg-success{% endif %}" style="font-size: 1.1em;">
+                                {{ result.threat_intel.virustotal.detection_rate }}
+                            </span>
+                        </p>
+                        <p>
+                            Malicioso: {{ result.threat_intel.virustotal.malicious }} | 
+                            Suspeito: {{ result.threat_intel.virustotal.suspicious }} | 
+                            Limpo: {{ result.threat_intel.virustotal.harmless }}
+                        </p>
+                        <p><strong>Reputação:</strong> {{ result.threat_intel.virustotal.reputation }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- AlienVault OTX -->
+                    {% if result.threat_intel.otx %}
+                    <div class="mb-3">
+                        <h6><strong>🔷 AlienVault OTX:</strong></h6>
+                        {% if result.threat_intel.otx.found %}
+                        <p class="text-warning">⚠️ Encontrado em {{ result.threat_intel.otx.pulse_count }} pulse(s)</p>
+                        {% if result.threat_intel.otx.pulses %}
+                        <ul>
+                            {% for pulse in result.threat_intel.otx.pulses %}
+                            <li>{{ pulse }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                        {% else %}
+                        <p class="text-muted">⚪ Não encontrado</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+
+            {% endif %}
+
+            <!-- Recomendações -->
+            {% if result.recommendations %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-header 
+                    {% if result.recommendations.0.level == 'critical' %}bg-danger text-white
+                    {% elif result.recommendations.0.level == 'warning' %}bg-warning text-dark
+                    {% else %}bg-success text-white{% endif %}">
+                    <h5 class="mb-0">
+                        {{ result.recommendations.0.icon }} {{ result.recommendations.0.title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <h6><strong>Ações Recomendadas:</strong></h6>
+                    <ul>
+                        {% for action in result.recommendations.0.actions %}
+                        <li>{{ action }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Informações sobre as Fontes -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Fontes de Threat Intelligence</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <h6>🔷 AlienVault OTX</h6>
+                            <p class="small text-muted">Threat intelligence colaborativa com milhões de indicadores</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>🔶 Abuse.ch</h6>
+                            <p class="small text-muted">Base de malware com hashes e URLs maliciosas</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>🛡️ AbuseIPDB</h6>
+                            <p class="small text-muted">Banco de IPs maliciosos reportados pela comunidade</p>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>🦠 VirusTotal</h6>
+                            <p class="small text-muted">70+ antivírus e scanners de segurança</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+</style>
+{% endblock %}
