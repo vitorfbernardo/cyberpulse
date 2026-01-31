@@ -31,15 +31,13 @@ def home(request):
     one_day_ago = now - timedelta(days=1)
     seven_days_ago = now - timedelta(days=7)
     thirty_days_ago = now - timedelta(days=30)
+    ninety_days_ago = now - timedelta(days=90)  # ← NOVA VARIÁVEL
     
     # KPIs principais
     total_news = NewsArticle.objects.count()
     last_24h = NewsArticle.objects.filter(created_at__gte=one_day_ago).count()
     last_7days = NewsArticle.objects.filter(created_at__gte=seven_days_ago).count()
     last_30days = NewsArticle.objects.filter(created_at__gte=thirty_days_ago).count()
-    
-    # Notícias recentes para exibição
-    recent_news = NewsArticle.objects.order_by('-published_date')[:5]
     
     # Distribuição por categoria (para gráfico de pizza)
     categories_data = []
@@ -53,13 +51,25 @@ def home(request):
             categories_labels.append(category_name)
             categories_data.append(count)
     
-    # Top 5 fontes (para gráfico de barras)
+    # Top 6 fontes (para gráfico de barras)
     top_sources = NewsArticle.objects.values('source').annotate(
         count=Count('id')
-    ).order_by('-count')[:5]
+    ).order_by('-count')[:6]  # ← TOP 6
     
     sources_labels = [item['source'] for item in top_sources]
     sources_data = [item['count'] for item in top_sources]
+    
+    # Notícias recentes - DOS ÚLTIMOS 90 DIAS, balanceado por fonte
+    recent_news = []
+    for source_name in sources_labels:
+        source_news = NewsArticle.objects.filter(
+            source=source_name,
+            published_date__gte=ninety_days_ago  # ← ÚLTIMOS 90 DIAS
+        ).order_by('-published_date')[:5]  # 5 por fonte
+        recent_news.extend(source_news)
+    
+    # Ordenar todas por data (mais recente primeiro)
+    recent_news = sorted(recent_news, key=lambda x: x.published_date, reverse=True)
     
     # Evolução temporal dos últimos 30 dias (para gráfico de linha)
     daily_stats = NewsArticle.objects.filter(
