@@ -17,47 +17,80 @@
         </div>
     </div>
 
-    <!-- Formulário de Busca -->
+    <!-- Formulário de Busca - INTERFACE MELHORADA -->
     <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
+        <div class="col-lg-8 offset-lg-2">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-search me-2"></i>
+                        Analisar Indicador de Ameaça
+                    </h5>
+                </div>
+                <div class="card-body p-4">
                     <form method="post" id="threatIntelForm">
                         {% csrf_token %}
                         
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <label for="query_type" class="form-label">Tipo de Indicador</label>
-                                <select class="form-select" id="query_type" name="query_type">
-                                    <option value="auto" selected>🔍 Detecção Automática</option>
-                                    <option value="ip">📍 IP Address</option>
-                                    <option value="hash">#️⃣ Hash (MD5/SHA256)</option>
-                                    <option value="domain">🌐 Domain</option>
-                                </select>
+                        <!-- Tipo de Indicador -->
+                        <div class="mb-4">
+                            <label for="query_type" class="form-label fw-bold">
+                                <i class="fas fa-filter me-2"></i>Tipo de Indicador
+                            </label>
+                            <select class="form-select form-select-lg" id="query_type" name="query_type">
+                                <option value="auto" selected>🔍 Detecção Automática</option>
+                                <option value="ip">📍 Endereço IP</option>
+                                <option value="hash">#️⃣ Hash (MD5/SHA1/SHA256)</option>
+                                <option value="domain">🌐 Domínio</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Campo de Input -->
+                        <div class="mb-4">
+                            <label for="query" class="form-label fw-bold">
+                                <i class="fas fa-keyboard me-2"></i>Indicador
+                            </label>
+                            <input 
+                                type="text" 
+                                class="form-control form-control-lg" 
+                                id="query" 
+                                name="query" 
+                                placeholder="Cole aqui o IP, hash ou domínio..."
+                                value="{{ query }}"
+                                required
+                            >
+                            <div class="form-text mt-2">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Suporta: <strong>IPv4</strong>, <strong>MD5</strong>, <strong>SHA1</strong>, <strong>SHA256</strong>, <strong>Domínios</strong>
                             </div>
-                            
-                            <div class="col-md-7">
-                                <label for="query" class="form-label">Indicador</label>
-                                <input 
-                                    type="text" 
-                                    class="form-control" 
-                                    id="query" 
-                                    name="query" 
-                                    placeholder="Ex: 185.220.101.15 ou d41d8cd98f00b204e9800998ecf8427e"
-                                    value="{{ query }}"
-                                    required
-                                >
-                                <small class="form-text text-muted">
-                                    Suporta: IPv4, MD5, SHA1, SHA256, Domínios
-                                </small>
-                            </div>
-                            
-                            <div class="col-md-2 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="fas fa-search me-2"></i>
-                                    Analisar
+                        </div>
+
+                        <!-- Exemplos Clicáveis -->
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-lightbulb me-2"></i>Exemplos Rápidos
+                            </label>
+                            <div class="d-flex flex-wrap gap-2">
+                                <button type="button" class="btn btn-outline-info btn-sm example-btn" data-value="185.220.101.15">
+                                    📍 IP Malicioso
+                                </button>
+                                <button type="button" class="btn btn-outline-warning btn-sm example-btn" data-value="ed01ebfbc9eb5bbea545af4d01bf5f1071661840480439c6e5babe8e080e41aa">
+                                    #️⃣ WannaCry Hash
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm example-btn" data-value="44d88612fea8a8f36de82e1278abb02f">
+                                    🦠 Emotet Hash
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm example-btn" data-value="8.8.8.8">
+                                    🟢 IP Limpo (Google DNS)
                                 </button>
                             </div>
+                        </div>
+                        
+                        <!-- Botão de Análise -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-search me-2"></i>
+                                Analisar Indicador
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -72,9 +105,10 @@
             
             <!-- Erro -->
             {% if result.error %}
-            <div class="alert alert-danger" role="alert">
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
-                {{ result.error }}
+                <strong>Erro:</strong> {{ result.error }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
             {% endif %}
 
@@ -399,5 +433,36 @@
     font-weight: 600;
     color: #2c3e50;
 }
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.example-btn {
+    transition: all 0.3s ease;
+}
+
+.example-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.card {
+    transition: transform 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
 </style>
+
+<script>
+// Exemplos clicáveis
+document.querySelectorAll('.example-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.getElementById('query').value = this.dataset.value;
+        document.getElementById('query').focus();
+    });
+});
+</script>
 {% endblock %}
