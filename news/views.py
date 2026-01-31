@@ -22,34 +22,96 @@ from news.bnvd_scraper import bnvd_client
 
 @login_required
 def home(request):
-    """Página inicial com resumo de notícias"""
-    # Buscar notícias recentes (últimos 7 dias)
-    seven_days_ago = timezone.now() - timedelta(days=7)
-    recent_news = NewsArticle.objects.filter(
-        published_date__gte=seven_days_ago
-    ).order_by('-published_date')[:10]
+    """Página inicial com dashboard estilo PowerBI"""
+    from django.db.models import Count
+    from django.db.models.functions import TruncDate
     
-    # Estatísticas
-    stats = {
-        'total': NewsArticle.objects.count(),
-        'last_24h': NewsArticle.objects.filter(
-            created_at__gte=timezone.now() - timedelta(hours=24)
-        ).count(),
-        'last_7days': NewsArticle.objects.filter(
-            created_at__gte=seven_days_ago
-        ).count(),
-    }
+    # Datas de referência
+    now = timezone.now()
+    one_day_ago = now - timedelta(days=1)
+    seven_days_ago = now - timedelta(days=7)
+    thirty_days_ago = now - timedelta(days=30)
     
-    # Contar por categoria
+    # KPIs principais
+    total_news = NewsArticle.objects.count()
+    last_24h = NewsArticle.objects.filter(created_at__gte=one_day_ago).count()
+    last_7days = NewsArticle.objects.filter(created_at__gte=seven_days_ago).count()
+    last_30days = NewsArticle.objects.filter(created_at__gte=thirty_days_ago).count()
+    
+    # Notícias recentes para exibição
+    recent_news = NewsArticle.objects.order_by('-published_date')[:5]
+    
+    # Distribuição por categoria (para gráfico de pizza)
+    categories_data = []
+    categories_labels = []
     categories_count = {}
+    
     for category_code, category_name in NewsArticle.CATEGORY_CHOICES:
         count = NewsArticle.objects.filter(category=category_code).count()
-        categories_count[category_name] = count
+        if count > 0:
+            categories_count[category_name] = count
+            categories_labels.append(category_name)
+            categories_data.append(count)
+    
+    # Top 5 fontes (para gráfico de barras)
+    top_sources = NewsArticle.objects.values('source').annotate(
+        count=Count('id')
+    ).order_by('-count')[:5]
+    
+    sources_labels = [item['source'] for item in top_sources]
+    sources_data = [item['count'] for item in top_sources]
+    
+    # Evolução temporal dos últimos 30 dias (para gráfico de linha)
+    daily_stats = NewsArticle.objects.filter(
+        created_at__gte=thirty_days_ago
+    ).annotate(
+        date=TruncDate('created_at')
+    ).values('date').annotate(
+        count=Count('id')
+    ).order_by('date')
+    
+    # Se não houver dados em created_at, tentar published_date
+    if not daily_stats:
+        daily_stats = NewsArticle.objects.filter(
+            published_date__gte=thirty_days_ago
+        ).annotate(
+            date=TruncDate('published_date')
+        ).values('date').annotate(
+            count=Count('id')
+        ).order_by('date')
+    
+    # Criar dicionário com dados reais
+    stats_dict = {stat['date']: stat['count'] for stat in daily_stats}
+    
+    # Preencher TODOS os 30 dias (com zero quando não houver dados)
+    timeline_labels = []
+    timeline_data = []
+    
+    for i in range(30):
+        date = (now - timedelta(days=29-i)).date()
+        timeline_labels.append(date.strftime('%d/%m'))
+        timeline_data.append(stats_dict.get(date, 0))
     
     context = {
+        # KPIs
+        'total_news': total_news,
+        'last_24h': last_24h,
+        'last_7days': last_7days,
+        'last_30days': last_30days,
+        
+        # Notícias recentes
         'recent_news': recent_news,
-        'stats': stats,
+        
+        # Dados para gráficos (convertidos para JSON)
+        'categories_labels': json.dumps(categories_labels),
+        'categories_data': json.dumps(categories_data),
         'categories_count': categories_count,
+        
+        'sources_labels': json.dumps(sources_labels),
+        'sources_data': json.dumps(sources_data),
+        
+        'timeline_labels': json.dumps(timeline_labels),
+        'timeline_data': json.dumps(timeline_data),
     }
     
     return render(request, 'home.html', context)
