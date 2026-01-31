@@ -1,13 +1,22 @@
 from django.apps import AppConfig
 import os
 
+
 class NewsConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'news'
     
     def ready(self):
-        """Executa quando a aplicação Django está pronta"""
-        # Inicia o scheduler apenas uma vez (evita duplicação em modo debug)
+        """
+        Executado quando o app Django é carregado
+        Inicia o agendador automático
+        """
+        # CRITICAL: Evitar duplicação no autoreloader do Django
         if os.environ.get('RUN_MAIN') == 'true':
-            from news.scheduler import start_scheduler
-            start_scheduler()
+            try:
+                from . import scheduler
+                scheduler.start_scheduler()
+            except Exception as e:
+                print(f"❌ Erro ao iniciar scheduler: {str(e)}")
+                import traceback
+                traceback.print_exc()

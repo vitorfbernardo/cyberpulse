@@ -7,21 +7,26 @@ logger = logging.getLogger(__name__)
 def update_news_job():
     """Job para atualizar notícias automaticamente"""
     try:
+        print("🔄 Iniciando atualização automática de notícias...")
         logger.info("🔄 Iniciando atualização automática de notícias...")
         call_command('update_news')
+        print("✅ Atualização automática concluída!")
         logger.info("✅ Atualização automática concluída!")
     except Exception as e:
+        print(f"❌ Erro na atualização: {str(e)}")
         logger.error(f"❌ Erro na atualização: {str(e)}")
 
 def start_scheduler():
     """Inicia o agendador de tarefas"""
+    print("🚀 Iniciando agendador de tarefas...")
+    
     scheduler = BackgroundScheduler()
     
     # Atualizar a cada 1 hora (3600 segundos)
     scheduler.add_job(
         update_news_job,
         'interval',
-        hours=1,
+        hours=1, 
         id='update_news_job',
         replace_existing=True
     )
@@ -38,4 +43,5 @@ def start_scheduler():
     # scheduler.add_job(update_news_job, 'interval', hours=6, id='update_news_job', replace_existing=True)
     
     scheduler.start()
+    print("⏰ Agendador de tarefas iniciado com sucesso!")
     logger.info("⏰ Agendador de tarefas iniciado com sucesso!")
