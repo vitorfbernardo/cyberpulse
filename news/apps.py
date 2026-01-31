@@ -11,8 +11,11 @@ class NewsConfig(AppConfig):
         Executado quando o app Django é carregado
         Inicia o agendador automático
         """
-        # CRITICAL: Evitar duplicação no autoreloader do Django
-        if os.environ.get('RUN_MAIN') == 'true':
+        import sys
+        
+        # Evitar duplicação no runserver (desenvolvimento)
+        # No gunicorn (produção), RUN_MAIN não existe, então passa direto
+        if os.environ.get('RUN_MAIN') != 'false' and 'migrate' not in sys.argv:
             try:
                 from . import scheduler
                 scheduler.start_scheduler()
