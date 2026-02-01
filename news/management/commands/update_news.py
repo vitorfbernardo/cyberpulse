@@ -2,10 +2,12 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from news.models import NewsArticle
 
-# Importar APENAS as 3 novas fontes
+# Importar TODAS as 5 fontes
 from news.cert_br_scraper import cert_br_client
 from news.cisa_scraper import cisa_client
 from news.krebs_scraper import krebs_client
+from news.hackernews_scraper import hackernews_client
+from news.bleepingcomputer_scraper import bleepingcomputer_client
 
 
 class Command(BaseCommand):
@@ -28,11 +30,13 @@ class Command(BaseCommand):
         total_created = 0
         total_duplicates = 0
         
-        # Lista de clientes (fontes)
+        # Lista de clientes (AGORA COM 5 FONTES!)
         sources = [
             ('CERT.br 🇧🇷', cert_br_client),
             ('CISA 🇺🇸', cisa_client),
             ('Krebs on Security', krebs_client),
+            ('The Hacker News', hackernews_client),
+            ('Bleeping Computer', bleepingcomputer_client),
         ]
         
         # Buscar de cada fonte
