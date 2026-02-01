@@ -1,0 +1,8 @@
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn cyberpulse_auth.wsgi:application"
+healthcheckPath = "/login/"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
